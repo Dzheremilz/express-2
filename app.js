@@ -35,13 +35,16 @@ const shower = async (req, res, next) => {
   next();
 };
 
+const usersData = async (req, res, next) => {
+  const users = JSON.parse(await fsPromises.readFile("./users.json", "UTF-8"));
+  req.db_user = users;
+  next();
+};
+
 // Middleware for checking if user exists
 const userChecker = async (req, res, next) => {
-  const db_user = JSON.parse(
-    await fsPromises.readFile("./users.json", "UTF-8")
-  );
   const username = req.body.username;
-  if (db_user.hasOwnProperty(username)) {
+  if (req.db_user.hasOwnProperty(username)) {
     next();
   } else {
     res.status(401).send("Username or password invalid.");
@@ -50,13 +53,10 @@ const userChecker = async (req, res, next) => {
 
 // Middleware for checking if password is correct
 const passwordChecker = async (req, res, next) => {
-  const db_user = JSON.parse(
-    await fsPromises.readFile("./users.json", "UTF-8")
-  );
   // const username = req.body.username;
   // const password = req.body.password;
   const { username, password } = req.body;
-  if (db_user[username] === password) {
+  if (req.db_user[username] === password) {
     next();
   } else {
     res.status(401).send("Username or password invalid.");
@@ -71,6 +71,7 @@ app.use(logger);
 app.use(shower);
 
 // login
+app.use("/login", usersData);
 app.use("/login", userChecker);
 app.use("/login", passwordChecker);
 
