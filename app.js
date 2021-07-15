@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const fsPromises = require("fs/promises");
 const cors = require("cors");
+const bcrypt = require("bcrypt"); // hash library
 
 const IP_LOOPBACK = "localhost";
 const IP_LOCAL = "172.31.103.30"; // my local ip on my network
@@ -36,9 +37,22 @@ const shower = async (req, res, next) => {
 };
 
 const usersData = async (req, res, next) => {
+  // try catch
   const users = JSON.parse(await fsPromises.readFile("./users.json", "UTF-8"));
   req.db_user = users;
   next();
+};
+
+const addUser = async (req, res) => {
+  const { username, password } = req.body;
+  const hash = await bcrypt.hash(password, username.length);
+  req.db_user[username] = hash;
+  await fsPromises.writeFile(
+    "./users.json",
+    JSON.stringify(req.db_user, null, 1),
+    "UTF-8"
+  );
+  res.send("User add");
 };
 
 // Middleware for checking if user exists
@@ -56,7 +70,7 @@ const passwordChecker = async (req, res, next) => {
   // const username = req.body.username;
   // const password = req.body.password;
   const { username, password } = req.body;
-  if (req.db_user[username] === password) {
+  if (await bcrypt.compare(password, req.db_user[username])) {
     next();
   } else {
     res.status(401).send("Username or password invalid.");
@@ -71,7 +85,8 @@ app.use(logger);
 app.use(shower);
 
 // login
-app.use("/login", usersData);
+app.use(["/login", "/register"], usersData);
+
 app.use("/login", userChecker);
 app.use("/login", passwordChecker);
 
@@ -84,9 +99,20 @@ app.get("/bye", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let username = req.body.username;
+  const username = req.body.username;
   res.send(`Welcome to your dashboard ${username}`);
 });
+
+app.post("/register", (req, res, next) => {
+  const { username } = req.body;
+  if (req.db_user.hasOwnProperty(username)) {
+    res.status(401).send("Username already taken.");
+  } else {
+    next();
+  }
+});
+
+app.use("/register", addUser);
 
 app.listen(PORT, IP_LOCAL, () => {
   //exécution d'un affichage au lacement du serveur.

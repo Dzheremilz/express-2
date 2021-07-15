@@ -1,5 +1,5 @@
 {
-  "alice": "123",
-  "bob": "abcd",
-  "charlie": "789"
+  "alice": "$2b$05$tVbK/8xFR9TDLfTblqaQl.KZ.nEW1p9doYT/0Re.GCYe5qI1N8D0K",
+  "bob": "$2b$04$ctv5x/E1PjRI4OgQThBivuQGz8Rn6bwZx0fOnF9bsMigIJ9NoHowi",
+  "charlie": "$2b$07$0oXVxE11CjCkASKzPkz/6.e4Z4JegYq5r12zWd31RhpYfUm3wu.sm"
 }
